@@ -1,0 +1,24 @@
+name: Actualizar zapatillas
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar zapatillas de Intervals.icu
+        env:
+          INTERVALS_KEY: ${{ secrets.INTERVALS_API_KEY }}
+          INTERVALS_ID: ${{ secrets.INTERVALS_ATHLETE_ID }}
+        run: |
+          curl -sS --fail -u "API_KEY:${INTERVALS_KEY}" "https://intervals.icu/api/v1/athlete/${INTERVALS_ID}/gear" -o gear.json
+      - name: Guardar cambios
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add gear.json
+          git diff --staged --quiet || (git commit -m "Actualizar zapatillas" && git push)
